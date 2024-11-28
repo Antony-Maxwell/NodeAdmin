@@ -6,7 +6,12 @@ const addCategory = async (req, res) => {
 
         // Validate input
         if (!name || !image) {
-            return res.status(400).json({ message: 'Name and image are required' });
+            return res.status(400).json({ 
+                status:false,
+                data:{
+                    message: 'Name and image are required'
+                }
+             });
         }
 
         // Create a new category
@@ -15,11 +20,48 @@ const addCategory = async (req, res) => {
         // Save to database
         await category.save();
 
-        res.status(201).json({ message: 'Category added successfully', category });
+        res.status(201).json({ 
+            status:true,
+            data:{
+                message: 'Category added successfully', category
+            }
+         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Failed to add category', error });
+        res.status(500).json({ 
+            status:false,
+            data:{
+                message: 'Failed to add category', error
+            }
+         });
     }
 };
 
-module.exports = {addCategory}
+const getCategory = async (req, res) => {
+    try {
+        const categories = await Category.find({}).lean();
+        
+        if (!categories?.length) {
+            return res.status(404).json({
+                status: false,
+                message: 'No categories found'
+            });
+        }
+ 
+        return res.status(200).json({
+            status: true,
+            count: categories.length,
+            data: categories
+        });
+ 
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        return res.status(500).json({
+            status: false,
+            message: 'Internal server error',
+            error: error.message 
+        });
+    }
+ };
+
+module.exports = {addCategory,getCategory}
