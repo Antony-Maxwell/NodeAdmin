@@ -16,7 +16,10 @@ const app = express();
 connectDB();
 
 // Middleware to parse JSON and handle CORS
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+    origin: '*', // Replace '*' with specific domains for tighter security
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

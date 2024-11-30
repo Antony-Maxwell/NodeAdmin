@@ -68,8 +68,8 @@ const getCategory = async (req, res) => {
 
  const updateCategory = async (req, res) => {
     try {
-        const { categoryId } = req.params;
-        const { name, image } = req.body;
+        // const { categoryId } = req.params;
+        const { categoryId,name, image } = req.body;
  
         if (!name && !image) {
             return res.status(400).json({
@@ -107,4 +107,4 @@ const getCategory = async (req, res) => {
     }
  };
 
-module.exports = {addCategory,getCategory}
+module.exports = {addCategory,getCategory,updateCategory}
