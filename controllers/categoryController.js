@@ -1,6 +1,5 @@
 const Category = require('../models/categoryModel')
 
-
 const addCategory = async (req, res) => {
     try {
         const { name } = req.body;
@@ -9,13 +8,17 @@ const addCategory = async (req, res) => {
         if (!name || !image) {
             return res.status(400).json({
                 status: false,
-                message: 'Name and image are required'
+                message: 'Name and image are required',
             });
         }
 
+        // Use environment variable for host URL in production
+        const host = process.env.HOST || `${req.protocol}://${req.get('host')}`;
+        const imageUrl = `${host}/${image.replace(/\\/g, '/')}`;
+
         const category = new Category({ 
             name, 
-            image: `${req.protocol}://${req.get('host')}/${image}`
+            image: imageUrl,
         });
 
         await category.save();
@@ -23,15 +26,14 @@ const addCategory = async (req, res) => {
         res.status(201).json({
             status: true,
             message: 'Category added successfully',
-            data: category
+            data: category,
         });
-
     } catch (error) {
         console.error(error);
         res.status(500).json({
             status: false,
             message: 'Failed to add category',
-            error: error.message
+            error: error.message,
         });
     }
 };
