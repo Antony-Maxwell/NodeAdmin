@@ -4,6 +4,8 @@ const upload = require('../middileware/multer')
 const categoryController = require('../controllers/categoryController')
 const productController = require('../controllers/productController')
 const brandController = require('../controllers/brandController')
+const bannerController = require('../controllers/bannerController')
+
 
 
 
@@ -13,14 +15,50 @@ router.get('/getCategory',categoryController.getCategory)
 router.put('/editCategory',categoryController.updateCategory)
 
 //product urls
-router.post('/addProduct', upload.fields([
-    { name: 'product_image', maxCount: 1 },
-    { name: 'product_sub_images', maxCount: 5 }
-]), productController.addProduct);
-router.get('/getProducts', productController.getProduct)
+router.post('/addProduct', 
+    (req, res, next) => {
+        console.log('Incoming request for product addition');
+        console.log('Content-Type:', req.headers['content-type']);
+        next();
+    },
+    upload.fields([
+        { name: 'image', maxCount: 1 },
+        { name: 'product_sub_images[]', maxCount: 5 } // Changed to match Dio's format
+    ]),
+    (error, req, res, next) => {
+        if (error instanceof multer.MulterError) {
+            return res.status(400).json({
+                status: false,
+                message: `Upload error: ${error.message}`,
+                error: error.code
+            });
+        } else if (error) {
+            return res.status(500).json({
+                status: false,
+                message: `Server error: ${error.message}`
+            });
+        }
+        next();
+    },
+    productController.addProduct
+);
 
-//brands url
+router.get('/getProducts', productController.getProduct);
+router.delete('/deleteProduct/:id', productController.deleteProduct);
+router.post('/updateProduct', 
+    upload.fields([
+        { name: 'image', maxCount: 1 },
+        { name: 'product_sub_images[]', maxCount: 5 }
+    ]),
+    productController.updateProduct
+);
+
+//brands urls
 router.post('/addBrand', upload.single('image'), brandController.addBrand);
-router.get('/getBrands', brandController.getBrand)
+router.get('/getBrands', brandController.getBrand);
+
+//banner urls
+router.post('/addBanner', upload.single('image'), bannerController.addBanner);
+router.get('/getBanner', bannerController.getBanner);
 
 module.exports = router;

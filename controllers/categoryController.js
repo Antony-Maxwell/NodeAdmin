@@ -14,7 +14,13 @@ const addCategory = async (req, res) => {
 
         // Use environment variable for host URL in production
         const host = process.env.HOST || `${req.protocol}://${req.get('host')}`;
-        const imageUrl = `${host}/${image.replace(/\\/g, '/')}`;
+        const relativeImagePath = req.file.path.replace(/\\/g, '/').split('uploads/')[1];
+        const imageUrl = `${host}/uploads/${relativeImagePath}`;
+        console.log('Received File:', req.file);
+        console.log('file path', imageUrl);
+        
+
+
 
         const category = new Category({ 
             name, 
@@ -44,7 +50,7 @@ const getCategory = async (req, res) => {
         const categories = await Category.find({}).lean();
         
         if (!categories?.length) {
-            return res.status(404).json({
+            return res.status(200).json({
                 status: false,
                 message: 'No categories found'
             });

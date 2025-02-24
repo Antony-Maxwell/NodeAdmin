@@ -1,13 +1,23 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// Configure storage for uploads
+const uploadsDir = process.env.UPLOADS_DIR || path.join(__dirname, 'uploads');
+
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log('Created uploads directory:', uploadsDir);
+}
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Save files in 'uploads' folder
+        console.log('Attempting to save file:', file.fieldname);
+        cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname)); // Unique file name
+        const filename = `${Date.now()}-${file.originalname}`;
+        console.log('Saving as:', filename);
+        cb(null, filename);
     }
 });
 

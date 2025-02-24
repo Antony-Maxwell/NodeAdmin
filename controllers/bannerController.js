@@ -2,9 +2,9 @@ const Banner = require('../models/bannerModel');
 
 const addBanner = async (req, res) => {
     try{
-        const banner_image = req.file?.path;
+        const image = req.file?.path;
 
-        if(!banner_image){
+        if(!image){
             return res.status(400).json({
                 status : false,
                 message : "image is required",
@@ -15,7 +15,7 @@ const addBanner = async (req, res) => {
                 const imageUrl = `${host}/${image.replace(/\\/g, '/')}`;
         
                 const banner = Banner({
-                    banner_image: imageUrl
+                    image: imageUrl
                 });
         
                 await banner.save();
@@ -40,7 +40,7 @@ const getBanner = async (req, res) => {
         const banner = await Banner.find({}).lean();
 
         if(!banner?.length){
-            return res.status(404).json({
+            return res.status(200).json({
                 status: false,
                 message: 'No banners found'
             });
@@ -62,4 +62,4 @@ const getBanner = async (req, res) => {
     }
 }
 
-module.exports = {addBanner}
+module.exports = {addBanner, getBanner}
