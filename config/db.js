@@ -12,10 +12,12 @@ const connectDB = async () => {
         });
         dbInstance = connection.connection.db;
         console.log('Connected to MongoDB');
-        return dbInstance; // Return the MongoDB instance
+        console.log('Connected to Mongoooo');
+        return dbInstance; 
     } catch (err) {
+        console.error("Mongooooooooo Connection Error ❌", err);
         console.error("MongoDB Connection Error ❌", err);
-        process.exit(1); // Exit process with failure
+        process.exit(1); 
     }
 };
 
