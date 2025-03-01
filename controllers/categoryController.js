@@ -3,7 +3,7 @@ const Category = require('../models/categoryModel')
 const addCategory = async (req, res) => {
     try {
         const { name } = req.body;
-        const image = req.file?.path;
+        const image = req.file?.path || req.file?.url || req.file?.secure_url;
 
         if (!name || !image) {
             return res.status(400).json({
@@ -11,20 +11,13 @@ const addCategory = async (req, res) => {
                 message: 'Name and image are required',
             });
         }
-
-        // Use environment variable for host URL in production
-        const host = process.env.HOST || `${req.protocol}://${req.get('host')}`;
-        const relativeImagePath = req.file.path.replace(/\\/g, '/').split('uploads/')[1];
-        const imageUrl = `${host}/uploads/${relativeImagePath}`;
-        console.log('Received File:', req.file);
-        console.log('file path', imageUrl);
         
 
 
 
         const category = new Category({ 
             name, 
-            image: imageUrl,
+            image: image,
         });
 
         await category.save();

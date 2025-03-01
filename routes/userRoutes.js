@@ -15,33 +15,37 @@ router.get('/getCategory',categoryController.getCategory)
 router.put('/editCategory',categoryController.updateCategory)
 
 //product urls
-router.post('/addProduct', 
+router.post(
+    '/addProduct',
     (req, res, next) => {
         console.log('Incoming request for product addition');
         console.log('Content-Type:', req.headers['content-type']);
         next();
     },
     upload.fields([
-        { name: 'image', maxCount: 1 },
-        { name: 'product_sub_images[]', maxCount: 5 } // Changed to match Dio's format
+        { name: 'image', maxCount: 1 }, // Main product image
+        { name: 'product_sub_images', maxCount: 5 } // Sub-images (without [])
     ]),
-    (error, req, res, next) => {
-        if (error instanceof multer.MulterError) {
-            return res.status(400).json({
+    async (req, res, next) => {
+        try {
+            if (!req.files) {
+                return res.status(400).json({
+                    status: false,
+                    message: 'No files uploaded'
+                });
+            }
+            next();
+        } catch (error) {
+            res.status(500).json({
                 status: false,
-                message: `Upload error: ${error.message}`,
-                error: error.code
-            });
-        } else if (error) {
-            return res.status(500).json({
-                status: false,
-                message: `Server error: ${error.message}`
+                message: 'Error processing uploaded files',
+                error: error.message
             });
         }
-        next();
     },
     productController.addProduct
 );
+
 
 router.get('/getProducts', productController.getProduct);
 router.delete('/deleteProduct/:id', productController.deleteProduct);

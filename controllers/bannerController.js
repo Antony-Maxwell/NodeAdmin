@@ -2,7 +2,7 @@ const Banner = require('../models/bannerModel');
 
 const addBanner = async (req, res) => {
     try{
-        const image = req.file?.path;
+        const image = req.file?.path || req.file?.url || req.file?.secure_url;
 
         if(!image){
             return res.status(400).json({
@@ -11,11 +11,9 @@ const addBanner = async (req, res) => {
             });
         }
 
-        const host = process.env.HOST || `${req.protocol}://${req.get('host')}`;
-                const imageUrl = `${host}/${image.replace(/\\/g, '/')}`;
         
                 const banner = Banner({
-                    image: imageUrl
+                    image: image
                 });
         
                 await banner.save();

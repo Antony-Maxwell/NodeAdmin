@@ -21,33 +21,15 @@ const addProduct = async (req, res) => {
            product_brand
        } = req.body;
 
-       const image = req.files['image'] 
-    ? req.files['image'][0].path 
-    : null;
+       const image = req.files['image'] ? req.files['image'][0].path : null;
 
-    // Handle sub-images with modified field name
-    const product_sub_images = req.files['product_sub_images[]'] 
-        ? req.files['product_sub_images[]'].map(file => file.path) 
-        : [];
+       // Handle multiple sub-images
+       const product_sub_images = req.files['product_sub_images']
+           ? req.files['product_sub_images'].map(file => file.path)
+           : [];
 
-    const host = process.env.HOST || `${req.protocol}://${req.get('host')}`;
-
-    // Construct URL for the main image
-    let imageUrl = null;
-    if (image) {
-        const relativeImagePath = image.replace(/\\/g, '/').split('uploads/')[1];
-        imageUrl = `${host}/uploads/${relativeImagePath}`;
-    }
-
-    // Construct URLs for sub-images
-    const subImageUrls = product_sub_images.map(file => {
-        const relativePath = file.replace(/\\/g, '/').split('uploads/')[1];
-        return `${host}/uploads/${relativePath}`;
-    });
-
-    console.log('Received File:', image);
-    console.log('Main Image URL:', imageUrl);
-    console.log('Sub Image URLs:', subImageUrls);
+       console.log('Main Image URL:', image);
+       console.log('Sub Image URLs:', product_sub_images);
 
        // Validation checks
        if (!product_name || product_name.trim().length < 3) {
@@ -114,8 +96,8 @@ const addProduct = async (req, res) => {
            product_description,
            product_act_price,
            product_sell_price,
-           image: imageUrl,
-           product_sub_images: subImageUrls,
+           image,
+           product_sub_images,
            is_color_available,
            product_colors: product_colors || [],
            is_size_available,
