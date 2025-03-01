@@ -6,7 +6,7 @@ let dbInstance;
 
 const connectDB = async () => {
     try {
-        const connection = await mongoose.connect("mongodb+srv://antonymaxwell619:26qzAeDevtsAyFKR@cluster0.ni23s.mongodb.net/shopvista", {
+        const connection = await mongoose.connect(process.env.MONGODB_URI, {
             ssl: true,
             serverSelectionTimeoutMS: 5000,
         });
