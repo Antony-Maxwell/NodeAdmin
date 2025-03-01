@@ -3,7 +3,7 @@ const Brand = require('../models/brandModel')
 
 const addBrand = async (req, res) => {
     try{
-        const image = req.file?.path;
+        const image = req.file?.path || req.file?.url || req.file?.secure_url;
         const { brand_name, product_id } = req.body;
 
         if(!brand_name || !image){
