@@ -1,24 +1,24 @@
+
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const path = require('path');
-const fs = require('fs');
 
-const uploadsDir = process.env.UPLOADS_DIR || path.join(__dirname, 'uploads');
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-    console.log('Created uploads directory:', uploadsDir);
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        console.log('Attempting to save file:', file.fieldname);
-        cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-        const filename = `${Date.now()}-${file.originalname}`;
-        console.log('Saving as:', filename);
-        cb(null, filename);
-    }
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'app_uploads', // Change to your preferred folder name
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'], // Add any formats you need
+    transformation: [{ width: 1000, crop: "limit" }], // Optional: resize images on upload
+    // Optional: Add a unique filename with timestamp
+    public_id: (req, file) => `${Date.now()}-${path.parse(file.originalname).name}`
+  }
 });
 
 const upload = multer({ storage });

@@ -13,11 +13,8 @@ const addBrand = async (req, res) => {
             });
         }
 
-        const host = process.env.HOST || `${req.protocol}://${req.get('host')}`;
-        const imageUrl = `${host}/${image.replace(/\\/g, '/')}`;
-
         const brand = Brand({
-            image: imageUrl,
+            image: image,
             brand_name,
             product_id
         });
