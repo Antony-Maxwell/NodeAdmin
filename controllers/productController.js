@@ -210,45 +210,51 @@ const updateProduct = async (req, res) => {
             });
         }
 
-        // Handle image updates
-        const host = process.env.HOST || `${req.protocol}://${req.get('host')}`;
-        let imageUrl = existingProduct.image; // Keep existing image by default
-
+        let imageUrl = existingProduct.image;
         if (req.files?.['image']) {
-            const image = req.files['image'][0].path;
-            const relativeImagePath = image.replace(/\\/g, '/').split('uploads/')[1];
-            imageUrl = `${host}/uploads/${relativeImagePath}`;
+            // Get the new image URL from multer
+            imageUrl = req.files['image'][0].path;
             
-            // Delete old image file if it exists
+            // Delete old image from Cloudinary if it exists
             if (existingProduct.image) {
-                const oldImagePath = existingProduct.image.split('/uploads/')[1];
-                const fullPath = path.join(process.env.UPLOADS_DIR || 'uploads', oldImagePath);
-                if (fs.existsSync(fullPath)) {
-                    fs.unlinkSync(fullPath);
+                try {
+                    const publicId = extractPublicIdFromUrl(existingProduct.image);
+                    if (publicId) {
+                        await cloudinary.uploader.destroy(publicId);
+                        console.log(`Deleted old main image: ${publicId}`);
+                    }
+                } catch (err) {
+                    console.log('Error deleting old main image:', err);
+                    // Continue with the update even if deletion fails
                 }
             }
         }
 
         // Handle sub-images update
-        let subImageUrls = existingProduct.product_sub_images; // Keep existing sub-images by default
-
-        if (req.files?.['product_sub_images[]']) {
-            // Delete old sub-image files
+        let subImageUrls = existingProduct.product_sub_images || [];
+        
+        // Check for sub-images in the expected field name
+        const subImagesField = req.files?.['product_sub_images'] ? 'product_sub_images' : 'product_sub_images';
+        if (req.files?.[subImagesField]) {
+            // Get new sub-image URLs from multer
+            const newSubImageUrls = req.files[subImagesField].map(file => file.path);
+            
+            // Delete old sub-images from Cloudinary
             if (existingProduct.product_sub_images?.length > 0) {
-                existingProduct.product_sub_images.forEach(subImage => {
-                    const oldSubImagePath = subImage.split('/uploads/')[1];
-                    const fullPath = path.join(process.env.UPLOADS_DIR || 'uploads', oldSubImagePath);
-                    if (fs.existsSync(fullPath)) {
-                        fs.unlinkSync(fullPath);
+                for (const subImage of existingProduct.product_sub_images) {
+                    try {
+                        const publicId = extractPublicIdFromUrl(subImage);
+                        if (publicId) {
+                            await cloudinary.uploader.destroy(publicId);
+                            console.log(`Deleted old sub-image: ${publicId}`);
+                        }
+                    } catch (err) {
+                        console.log('Error deleting old sub-image:', err);
                     }
-                });
+                }
             }
-
-            // Add new sub-images
-            subImageUrls = req.files['product_sub_images[]'].map(file => {
-                const relativePath = file.path.replace(/\\/g, '/').split('uploads/')[1];
-                return `${host}/uploads/${relativePath}`;
-            });
+            
+            subImageUrls = newSubImageUrls;
         }
 
         // Validation checks (same as addProduct)
@@ -341,6 +347,25 @@ const updateProduct = async (req, res) => {
         });
     }
 };
+
+function extractPublicIdFromUrl(url) {
+    if (!url) return null;
+    
+    try {
+        // Cloudinary URLs usually look like:
+        // https://res.cloudinary.com/cloud-name/image/upload/v1234567890/folder/filename.jpg
+        const parts = url.split('/');
+        const filename = parts[parts.length - 1];
+        const folderPath = parts[parts.length - 2];
+        
+        // Remove file extension to get the public ID
+        const publicId = `${folderPath}/${filename.split('.')[0]}`;
+        return publicId;
+    } catch (error) {
+        console.error('Error extracting public ID:', error);
+        return null;
+    }
+}
 
 
 module.exports = { addProduct, getProduct, deleteProduct, updateProduct}
