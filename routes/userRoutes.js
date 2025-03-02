@@ -52,7 +52,7 @@ router.delete('/deleteProduct/:id', productController.deleteProduct);
 router.post('/updateProduct', 
     upload.fields([
         { name: 'image', maxCount: 1 },
-        { name: 'product_sub_images[]', maxCount: 5 }
+        { name: 'product_sub_images', maxCount: 5 }
     ]),
     productController.updateProduct
 );
