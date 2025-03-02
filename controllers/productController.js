@@ -352,20 +352,18 @@ function extractPublicIdFromUrl(url) {
     if (!url) return null;
     
     try {
-        // Cloudinary URLs usually look like:
-        // https://res.cloudinary.com/cloud-name/image/upload/v1234567890/folder/filename.jpg
-        const parts = url.split('/');
-        const filename = parts[parts.length - 1];
-        const folderPath = parts[parts.length - 2];
+        // Example URL: https://res.cloudinary.com/di31l0y9w/image/upload/v1740854715/app_uploads/1740854714886-1000197239.jpg
+        const regex = /\/v\d+\/(.+)\.\w+$/;
+        const match = url.match(regex);
         
-        // Remove file extension to get the public ID
-        const publicId = `${folderPath}/${filename.split('.')[0]}`;
-        return publicId;
+        if (match && match[1]) {
+            return match[1]; // Returns "app_uploads/1740854714886-1000197239"
+        }
+        return null;
     } catch (error) {
         console.error('Error extracting public ID:', error);
         return null;
     }
 }
-
 
 module.exports = { addProduct, getProduct, deleteProduct, updateProduct}
