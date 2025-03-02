@@ -182,8 +182,8 @@ const deleteProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     try {
-        const productId = req.body.id; // Get product ID from URL parameter
-        
+        const productId = req.body.id;
+
         console.log('Request files:', req.files);
         console.log('Request body:', req.body);
 
@@ -198,10 +198,11 @@ const updateProduct = async (req, res) => {
             size_in_measurment,
             product_size,
             product_category,
-            product_brand
+            product_brand,
+            image
         } = req.body;
 
-        // Find existing product first
+        // Find existing product
         const existingProduct = await Product.findById(productId);
         if (!existingProduct) {
             return res.status(404).json({
@@ -211,34 +212,36 @@ const updateProduct = async (req, res) => {
         }
 
         let imageUrl = existingProduct.image;
-        if (req.files?.['image']) {
-            // Get the new image URL from multer
+
+        // Handle main image update
+        if (req.files?.['image']?.[0]) {
+            // New image file uploaded
             imageUrl = req.files['image'][0].path;
-            
-            // Delete old image from Cloudinary if it exists
+
+            // Delete old image from Cloudinary
             if (existingProduct.image) {
                 try {
                     const publicId = extractPublicIdFromUrl(existingProduct.image);
                     if (publicId) {
                         await cloudinary.uploader.destroy(publicId);
-                        console.log(`Deleted old main image: ${publicId}`);
                     }
                 } catch (err) {
-                    console.log('Error deleting old main image:', err);
-                    // Continue with the update even if deletion fails
+                    console.error('Error deleting old image:', err);
                 }
             }
+        } else if (image && image !== existingProduct.image) {
+            // Image URL provided in request body
+            imageUrl = image;
         }
 
         // Handle sub-images update
         let subImageUrls = existingProduct.product_sub_images || [];
-        
-        // Check for sub-images in the expected field name
-        const subImagesField = req.files?.['product_sub_images'] ? 'product_sub_images' : 'product_sub_images';
+        const subImagesField = 'product_sub_images';
+
         if (req.files?.[subImagesField]) {
-            // Get new sub-image URLs from multer
+            // New sub-image files uploaded
             const newSubImageUrls = req.files[subImagesField].map(file => file.path);
-            
+
             // Delete old sub-images from Cloudinary
             if (existingProduct.product_sub_images?.length > 0) {
                 for (const subImage of existingProduct.product_sub_images) {
@@ -249,11 +252,11 @@ const updateProduct = async (req, res) => {
                             console.log(`Deleted old sub-image: ${publicId}`);
                         }
                     } catch (err) {
-                        console.log('Error deleting old sub-image:', err);
+                        console.error('Error deleting old sub-image:', err);
                     }
                 }
             }
-            
+
             subImageUrls = newSubImageUrls;
         }
 
@@ -287,7 +290,7 @@ const updateProduct = async (req, res) => {
             });
         }
 
-        if (product_act_price && product_sell_price && 
+        if (product_act_price && product_sell_price &&
             parseFloat(product_sell_price) >= parseFloat(product_act_price)) {
             return res.status(400).json({
                 status: false,
